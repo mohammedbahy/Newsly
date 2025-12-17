@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "440842846514",
+    "project_id": "newsly-a351b",
+    "storage_bucket": "newsly-a351b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440842846514:android:e991e2f8da0f01affb172b",
+        "android_client_info": {
+          "package_name": "com.bahy.newsly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "440842846514-j46phf0s45t10m7p8qqeii7ea00mcp6f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bahy.newsly",
+            "certificate_hash": "0525b7ffd5f3b7484a6863c0cd7efd2e6a050e2b"
+          }
+        },
+        {
+          "client_id": "440842846514-ilo3u8toliient5ftvbufaeq2hm29pnm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqK736CAVJYXrhiHZ6tZGBh_miTcUS9Vg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "440842846514-ilo3u8toliient5ftvbufaeq2hm29pnm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
