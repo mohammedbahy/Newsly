@@ -81,9 +81,33 @@ fun SignInScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Validation functions
+    fun validateEmail(emailValue: String): String? {
+        return when {
+            emailValue.isEmpty() -> "Email is required"
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches() -> "Please enter a valid email address"
+            else -> null
+        }
+    }
+    
+    fun validatePassword(passwordValue: String): String? {
+        return when {
+            passwordValue.isEmpty() -> "Password is required"
+            passwordValue.length < 6 -> "Password must be at least 6 characters"
+            else -> null
+        }
+    }
+    
+    fun isFormValid(): Boolean {
+        return emailError == null && passwordError == null && 
+               email.isNotEmpty() && password.isNotEmpty()
+    }
     
     // Google Sign In launcher
     val googleSignInLauncher = rememberLauncherForActivityResult(
@@ -171,26 +195,56 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Email Field
-            CustomTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = stringResource(id = R.string.email_address),
-                leadingIcon = Icons.Default.Email,
-                keyboardType = KeyboardType.Email,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CustomTextField(
+                    value = email,
+                    onValueChange = { 
+                        email = it
+                        emailError = validateEmail(it)
+                        viewModel.clearError()
+                    },
+                    placeholder = stringResource(id = R.string.email_address),
+                    leadingIcon = Icons.Default.Email,
+                    keyboardType = KeyboardType.Email,
+                    isError = emailError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (emailError != null) {
+                    Text(
+                        text = emailError ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Password Field
-            CustomTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = stringResource(id = R.string.password),
-                leadingIcon = Icons.Default.Lock,
-                isPassword = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CustomTextField(
+                    value = password,
+                    onValueChange = { 
+                        password = it
+                        passwordError = validatePassword(it)
+                        viewModel.clearError()
+                    },
+                    placeholder = stringResource(id = R.string.password),
+                    leadingIcon = Icons.Default.Lock,
+                    isPassword = true,
+                    isError = passwordError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -222,11 +276,15 @@ fun SignInScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .clickable(enabled = !uiState.isLoading) {
-                        viewModel.signIn(email, password)
+                    .clickable(enabled = !uiState.isLoading && isFormValid()) {
+                        emailError = validateEmail(email)
+                        passwordError = validatePassword(password)
+                        if (emailError == null && passwordError == null) {
+                            viewModel.signIn(email, password)
+                        }
                     },
                 shape = RoundedCornerShape(12.dp),
-                color = if (uiState.isLoading) Midnight.copy(alpha = 0.6f) else Midnight
+                color = if (uiState.isLoading || !isFormValid()) Midnight.copy(alpha = 0.6f) else Midnight
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -324,7 +382,8 @@ private fun CustomTextField(
     leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
     isPassword: Boolean = false,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean = false
 ) {
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
     
@@ -341,7 +400,7 @@ private fun CustomTextField(
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
-                tint = Midnight.copy(alpha = 0.6f)
+                tint = if (isError) Color.Red.copy(alpha = 0.6f) else Midnight.copy(alpha = 0.6f)
             )
         },
         modifier = modifier,
@@ -349,14 +408,17 @@ private fun CustomTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color(0xFFF5F5F5),
             unfocusedContainerColor = Color(0xFFF5F5F5),
-            focusedBorderColor = Color.Transparent,
-            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor = if (isError) Color.Red else Color.Transparent,
+            unfocusedBorderColor = if (isError) Color.Red else Color.Transparent,
             focusedTextColor = Midnight,
-            unfocusedTextColor = Midnight
+            unfocusedTextColor = Midnight,
+            errorBorderColor = Color.Red,
+            errorContainerColor = Color(0xFFFFEBEE)
         ),
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true
+        singleLine = true,
+        isError = isError
     )
 }
 

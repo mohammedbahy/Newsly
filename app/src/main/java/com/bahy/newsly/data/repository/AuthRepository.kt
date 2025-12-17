@@ -67,6 +67,38 @@ class AuthRepository(
         }
     }
 
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            if (email.isEmpty()) {
+                return Result.failure(Exception("Email is required"))
+            }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                return Result.failure(Exception("Please enter a valid email address"))
+            }
+
+            firebaseAuth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: com.google.firebase.auth.FirebaseAuthException) {
+            val errorMessage = when (e.errorCode) {
+                "ERROR_USER_NOT_FOUND" -> "No account found with this email"
+                "ERROR_INVALID_EMAIL" -> "Invalid email address"
+                "ERROR_NETWORK_REQUEST_FAILED" -> "Network error. Please check your internet connection"
+                else -> e.message ?: "Failed to send reset email"
+            }
+            Result.failure(Exception(errorMessage))
+        } catch (e: Exception) {
+            val errorMessage = when {
+                e.message?.contains("network", ignoreCase = true) == true ->
+                    "Network error. Please check your internet connection"
+                e.message?.contains("socket", ignoreCase = true) == true ->
+                    "Connection error. Please check your internet connection"
+                else -> e.message ?: "An error occurred. Please try again"
+            }
+            Result.failure(Exception(errorMessage))
+        }
+    }
+
     suspend fun signUp(
         username: String,
         email: String,

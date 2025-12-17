@@ -13,6 +13,10 @@
     <string name="email_or_phone">Email or Phone</string>
     <string name="agree_terms">Agree to Our terms and conditions</string>
     <string name="forgotten_password">Forgot Password?</string>
+    <string name="forgot_password_message">Enter your email and we will send you a link to reset your password.</string>
+    <string name="send_reset_link">Send Reset Link</string>
+    <string name="back_to_sign_in">Back to Sign In</string>
+    <string name="password_reset_success_message">Password reset link sent! Go to Gmail to check your email. If you don’t find it in your inbox, check your Spam folder.</string>
     <string name="or">or</string>
     <string name="sign_in_with_google">Sign In with Google</string>
     <string name="sign_in_with_facebook">Sign In with Facebook</string>

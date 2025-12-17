@@ -13,6 +13,7 @@ import com.bahy.newsly.ui.profile.ProfileScreen
 import com.bahy.newsly.ui.signin.SignInScreen
 import com.bahy.newsly.ui.signup.SignUpScreen
 import com.bahy.newsly.ui.splash.SplashScreen
+import com.bahy.newsly.ui.forgotpassword.ForgotPasswordScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.compose.ui.platform.LocalContext
@@ -21,6 +22,7 @@ sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object SignIn : Screen("sign_in")
     object SignUp : Screen("sign_up")
+    object ForgotPassword : Screen("forgot_password")
     object Home : Screen("home")
     object Categories : Screen("categories")
     object CategoryArticles : Screen("category_articles/{categoryName}") {
@@ -58,10 +60,18 @@ fun NavGraph(navController: NavHostController) {
                     }
                 },
                 onForgotPasswordClick = {
-                    // TODO: Navigate to forgot password screen
+                    navController.navigate(Screen.ForgotPassword.route)
                 },
                 onNavigateToSignUp = {
                     navController.navigate(Screen.SignUp.route)
+                }
+            )
+        }
+
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                onBackToSignIn = {
+                    navController.popBackStack()
                 }
             )
         }

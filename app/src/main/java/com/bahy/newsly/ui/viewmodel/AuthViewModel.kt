@@ -14,7 +14,8 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentUser: User? = null,
-    val isSignedIn: Boolean = false
+    val isSignedIn: Boolean = false,
+    val passwordResetEmailSent: Boolean = false
 )
 
 class AuthViewModel(
@@ -80,6 +81,32 @@ class AuthViewModel(
                     )
                 }
         }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, passwordResetEmailSent = false)
+
+            authRepository.sendPasswordResetEmail(email)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        passwordResetEmailSent = true,
+                        error = null
+                    )
+                }
+                .onFailure { exception ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        passwordResetEmailSent = false,
+                        error = exception.message
+                    )
+                }
+        }
+    }
+    
+    fun clearPasswordResetState() {
+        _uiState.value = _uiState.value.copy(passwordResetEmailSent = false)
     }
 
     fun signInWithGoogle(googleSignInAccount: GoogleSignInAccount) {

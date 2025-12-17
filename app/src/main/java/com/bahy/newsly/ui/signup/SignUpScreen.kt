@@ -76,7 +76,56 @@ fun SignUpScreen(
     var emailOrPhone by remember { mutableStateOf("") }
     var agreeToTerms by remember { mutableStateOf(false) }
     
+    var usernameError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Validation functions
+    fun validateUsername(usernameValue: String): String? {
+        return when {
+            usernameValue.isEmpty() -> "Username is required"
+            usernameValue.length < 3 -> "Username must be at least 3 characters"
+            usernameValue.length > 20 -> "Username must be less than 20 characters"
+            !usernameValue.matches(Regex("^[a-zA-Z0-9_]+$")) -> "Username can only contain letters, numbers, and underscores"
+            else -> null
+        }
+    }
+    
+    fun validatePassword(passwordValue: String): String? {
+        return when {
+            passwordValue.isEmpty() -> "Password is required"
+            passwordValue.length < 6 -> "Password must be at least 6 characters"
+            passwordValue.length > 50 -> "Password must be less than 50 characters"
+            else -> null
+        }
+    }
+    
+    fun validateConfirmPassword(passwordValue: String, confirmValue: String): String? {
+        return when {
+            confirmValue.isEmpty() -> "Please confirm your password"
+            passwordValue != confirmValue -> "Passwords do not match"
+            else -> null
+        }
+    }
+    
+    fun validateEmail(emailValue: String): String? {
+        return when {
+            emailValue.isEmpty() -> "Email is required"
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(emailValue).matches() -> "Please enter a valid email address"
+            else -> null
+        }
+    }
+    
+    fun isFormValid(): Boolean {
+        return usernameError == null && passwordError == null && 
+               confirmPasswordError == null && emailError == null &&
+               username.isNotEmpty() && password.isNotEmpty() && 
+               confirmPassword.isNotEmpty() && emailOrPhone.isNotEmpty() &&
+               agreeToTerms
+    }
     
     // Navigate on successful sign up
     LaunchedEffect(uiState.isSignedIn) {
@@ -123,49 +172,110 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // Username Field
-            CustomTextField(
-                value = username,
-                onValueChange = { username = it },
-                placeholder = stringResource(id = R.string.username),
-                leadingIcon = Icons.Default.Person,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CustomTextField(
+                    value = username,
+                    onValueChange = { 
+                        username = it
+                        usernameError = validateUsername(it)
+                        viewModel.clearError()
+                    },
+                    placeholder = stringResource(id = R.string.username),
+                    leadingIcon = Icons.Default.Person,
+                    isError = usernameError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (usernameError != null) {
+                    Text(
+                        text = usernameError ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Password Field
-            CustomTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = stringResource(id = R.string.password),
-                leadingIcon = Icons.Default.Lock,
-                isPassword = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CustomTextField(
+                    value = password,
+                    onValueChange = { 
+                        password = it
+                        passwordError = validatePassword(it)
+                        confirmPasswordError = validateConfirmPassword(it, confirmPassword)
+                        viewModel.clearError()
+                    },
+                    placeholder = stringResource(id = R.string.password),
+                    leadingIcon = Icons.Default.Lock,
+                    isPassword = true,
+                    isError = passwordError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Confirm Password Field
-            CustomTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                placeholder = stringResource(id = R.string.confirm_password),
-                leadingIcon = Icons.Default.Lock,
-                isPassword = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CustomTextField(
+                    value = confirmPassword,
+                    onValueChange = { 
+                        confirmPassword = it
+                        confirmPasswordError = validateConfirmPassword(password, it)
+                        viewModel.clearError()
+                    },
+                    placeholder = stringResource(id = R.string.confirm_password),
+                    leadingIcon = Icons.Default.Lock,
+                    isPassword = true,
+                    isError = confirmPasswordError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (confirmPasswordError != null) {
+                    Text(
+                        text = confirmPasswordError ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Email or Phone Field
-            CustomTextField(
-                value = emailOrPhone,
-                onValueChange = { emailOrPhone = it },
-                placeholder = stringResource(id = R.string.email_or_phone),
-                leadingIcon = Icons.Default.Lock,
-                keyboardType = KeyboardType.Text,
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Email Field
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CustomTextField(
+                    value = emailOrPhone,
+                    onValueChange = { 
+                        emailOrPhone = it
+                        emailError = validateEmail(it)
+                        viewModel.clearError()
+                    },
+                    placeholder = stringResource(id = R.string.email_or_phone),
+                    leadingIcon = Icons.Default.Email,
+                    keyboardType = KeyboardType.Email,
+                    isError = emailError != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (emailError != null) {
+                    Text(
+                        text = emailError ?: "",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -205,13 +315,19 @@ fun SignUpScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .clickable(enabled = !uiState.isLoading && agreeToTerms) {
-                        if (password == confirmPassword) {
+                    .clickable(enabled = !uiState.isLoading && isFormValid()) {
+                        usernameError = validateUsername(username)
+                        passwordError = validatePassword(password)
+                        confirmPasswordError = validateConfirmPassword(password, confirmPassword)
+                        emailError = validateEmail(emailOrPhone)
+                        
+                        if (usernameError == null && passwordError == null && 
+                            confirmPasswordError == null && emailError == null) {
                             viewModel.signUp(username, emailOrPhone, password)
                         }
                     },
                 shape = RoundedCornerShape(12.dp),
-                color = if (uiState.isLoading || !agreeToTerms) Color(0xFFE0E0E0).copy(alpha = 0.6f) else Color(0xFFE0E0E0)
+                color = if (uiState.isLoading || !isFormValid()) Color(0xFFE0E0E0).copy(alpha = 0.6f) else Color(0xFFE0E0E0)
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -250,7 +366,8 @@ private fun CustomTextField(
     leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
     isPassword: Boolean = false,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean = false
 ) {
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
     OutlinedTextField(
@@ -266,7 +383,7 @@ private fun CustomTextField(
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
-                tint = Midnight.copy(alpha = 0.6f)
+                tint = if (isError) Color.Red.copy(alpha = 0.6f) else Midnight.copy(alpha = 0.6f)
             )
         },
         modifier = modifier,
@@ -274,14 +391,17 @@ private fun CustomTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color(0xFFF5F5F5),
             unfocusedContainerColor = Color(0xFFF5F5F5),
-            focusedBorderColor = Color.Transparent,
-            unfocusedBorderColor = Color.Transparent,
+            focusedBorderColor = if (isError) Color.Red else Color.Transparent,
+            unfocusedBorderColor = if (isError) Color.Red else Color.Transparent,
             focusedTextColor = Midnight,
-            unfocusedTextColor = Midnight
+            unfocusedTextColor = Midnight,
+            errorBorderColor = Color.Red,
+            errorContainerColor = Color(0xFFFFEBEE)
         ),
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true
+        singleLine = true,
+        isError = isError
     )
 }
 
